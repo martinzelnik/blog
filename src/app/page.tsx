@@ -1,0 +1,95 @@
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import PostList from '@/app/_components/PostList';
+import AddPostForm from '@/app/_components/AddPostForm';
+import LanguageToggle from '@/app/_components/LanguageToggle';
+import { LanguageProvider } from '@/app/_contexts/LanguageContext';
+import type { Post } from '@/app/_components/PostItem';
+
+async function fetchPosts(): Promise<Post[]> {
+  const res = await fetch('/api/posts');
+  if (!res.ok) throw new Error('Failed to fetch posts');
+  return res.json();
+}
+
+export default function HomePage() {
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [posting, setPosting] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadPosts = useCallback(async () => {
+    try {
+      setError(null);
+      const data = await fetchPosts();
+      setPosts(data);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to load posts');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadPosts();
+  }, [loadPosts]);
+
+  const addPost = async (data: Omit<Post, 'id'>) => {
+    setPosting(true);
+    try {
+      const res = await fetch('/api/posts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error ?? 'Failed to create post');
+      }
+      const newPost: Post = await res.json();
+      setPosts((prev) => [newPost, ...prev]);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to add post');
+    } finally {
+      setPosting(false);
+    }
+  };
+
+  const deletePost = async (id: string) => {
+    setDeletingId(id);
+    try {
+      const res = await fetch(`/api/posts/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete post');
+      setPosts((prev) => prev.filter((p) => p.id !== id));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to delete post');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  return (
+    <LanguageProvider>
+      <div className="app-wrapper">
+        <header className="page-header">
+          <h1>My Simple Blog</h1>
+          <LanguageToggle />
+        </header>
+        {error && <p role="alert" style={{ color: 'red' }}>{error}</p>}
+        {loading ? (
+          <div className="loading-spinner" role="status" aria-live="polite">
+            <div className="loading-spinner__ring" aria-hidden />
+            <p className="loading-spinner__text">Loading posts…</p>
+          </div>
+        ) : (
+          <>
+            <AddPostForm onAddPost={addPost} isPosting={posting} />
+            <PostList posts={posts} onDelete={deletePost} deletingId={deletingId} />
+          </>
+        )}
+      </div>
+    </LanguageProvider>
+  );
+}
