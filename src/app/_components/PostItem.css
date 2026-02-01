@@ -1,8 +1,11 @@
 .post {
-  border: 1px solid #ddd;
+  border: 1px solid rgba(221, 221, 221, 0.5);
   padding: 1rem;
   border-radius: 8px;
   position: relative;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .post h2 {
@@ -46,6 +49,11 @@
 }
 
 @media (prefers-color-scheme: dark) {
+  .post {
+    background: rgba(26, 26, 26, 0.6);
+    border-color: rgba(63, 63, 70, 0.5);
+  }
+
   .post-expand-button {
     color: #818cf8;
   }
