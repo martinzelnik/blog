@@ -7,13 +7,16 @@
   -webkit-backdrop-filter: blur(12px);
   color: white;
   border: 1px solid rgba(220, 53, 69, 0.4);
-  font-size: 1.2rem;
+  font-size: var(--btn-font-size);
+  font-weight: var(--btn-font-weight);
+  font-family: inherit;
   cursor: pointer;
   padding: 0.35rem 0.45rem;
-  border-radius: 4px;
+  border-radius: var(--btn-radius);
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: var(--btn-transition);
 }
 
 .delete-btn:hover:not(:disabled) {
@@ -22,7 +25,7 @@
 
 .delete-btn:disabled {
   cursor: not-allowed;
-  opacity: 0.9;
+  opacity: var(--btn-disabled-opacity);
 }
 
 .delete-btn svg {

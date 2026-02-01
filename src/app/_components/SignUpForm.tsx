@@ -71,7 +71,14 @@ function SignUpForm({ onSubmit, isLoading = false, error }: SignUpFormProps) {
         className="signup-form__submit"
         disabled={isLoading || !passwordsMatch}
       >
-        {isLoading ? 'Signing up…' : 'Sign Up'}
+        {isLoading ? (
+          <>
+            <span className="signup-form__spinner" aria-hidden />
+            Signing up…
+          </>
+        ) : (
+          'Sign Up'
+        )}
       </button>
     </form>
   );

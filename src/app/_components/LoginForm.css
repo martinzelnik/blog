@@ -35,15 +35,18 @@
   justify-content: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  background: rgba(100, 108, 255, 0.6);
+  background: var(--btn-primary-bg);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  color: white;
-  border: 1px solid rgba(100, 108, 255, 0.3);
-  border-radius: 4px;
+  color: var(--btn-primary-color);
+  border: var(--btn-primary-border);
+  border-radius: var(--btn-radius);
   cursor: pointer;
-  font-size: 1rem;
+  font-size: var(--btn-font-size-lg);
+  font-weight: var(--btn-font-weight);
+  font-family: inherit;
   margin-top: 0.5rem;
+  transition: var(--btn-transition);
 }
 
 .login-form__spinner {
@@ -56,11 +59,12 @@
 }
 
 .login-form__submit:hover {
-  background: rgba(83, 91, 242, 0.7);
+  background: var(--btn-primary-hover-bg);
+  border-color: var(--btn-primary-hover-border);
 }
 
 .login-form__submit:disabled {
-  opacity: 0.7;
+  opacity: var(--btn-disabled-opacity);
   cursor: not-allowed;
 }
 
