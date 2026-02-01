@@ -1,12 +1,10 @@
 .add-post {
-  border: 1px solid #ddd;
-  padding: 1rem;
-  border-radius: 8px;
-  margin-bottom: 2rem;
+  padding: 0;
 }
 
 .add-post h2 {
   margin-top: 0;
+  display: none;
 }
 
 .add-post__language label {

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import PostList from '@/app/_components/PostList';
 import AddPostForm from '@/app/_components/AddPostForm';
 import LanguageToggle from '@/app/_components/LanguageToggle';
+import Modal from '@/app/_components/Modal';
 import { LanguageProvider } from '@/app/_contexts/LanguageContext';
 import type { Post } from '@/app/_components/PostItem';
 
@@ -19,6 +20,7 @@ export default function HomePage() {
   const [posting, setPosting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const loadPosts = useCallback(async () => {
     try {
@@ -78,17 +80,31 @@ export default function HomePage() {
           <LanguageToggle />
         </header>
         {error && <p role="alert" style={{ color: 'red' }}>{error}</p>}
+        <button 
+          className="add-post-button" 
+          onClick={() => setIsModalOpen(true)}
+        >
+          Add New Post
+        </button>
         {loading ? (
           <div className="loading-spinner" role="status" aria-live="polite">
             <div className="loading-spinner__ring" aria-hidden />
             <p className="loading-spinner__text">Loading posts…</p>
           </div>
         ) : (
-          <>
-            <AddPostForm onAddPost={addPost} isPosting={posting} />
-            <PostList posts={posts} onDelete={deletePost} deletingId={deletingId} />
-          </>
+          <PostList posts={posts} onDelete={deletePost} deletingId={deletingId} />
         )}
+        <Modal 
+          isOpen={isModalOpen} 
+          onClose={() => setIsModalOpen(false)}
+          title="Add New Post"
+        >
+          <AddPostForm 
+            onAddPost={addPost} 
+            isPosting={posting}
+            onSuccess={() => setIsModalOpen(false)}
+          />
+        </Modal>
       </div>
     </LanguageProvider>
   );

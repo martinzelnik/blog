@@ -6,9 +6,10 @@ import { useLanguage } from '@/app/_contexts/LanguageContext';
 interface AddPostFormProps {
   onAddPost: (data: Omit<Post, 'id'>) => void;
   isPosting?: boolean;
+  onSuccess?: () => void;
 }
 
-function AddPostForm({ onAddPost, isPosting = false }: AddPostFormProps) {
+function AddPostForm({ onAddPost, isPosting = false, onSuccess }: AddPostFormProps) {
   const { language } = useLanguage();
   const [postLanguage, setPostLanguage] = useState<'en' | 'cs'>(language);
   const [title, setTitle] = useState('');
@@ -47,6 +48,7 @@ function AddPostForm({ onAddPost, isPosting = false }: AddPostFormProps) {
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
+      onSuccess?.();
     }
   };
 
