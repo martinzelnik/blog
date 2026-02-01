@@ -182,21 +182,36 @@
   list-style: none;
   margin: 0;
   padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .post-comment {
-  padding: 0.6rem 0;
-  border-bottom: 1px solid rgba(221, 221, 221, 0.4);
+  padding: 0.75rem 1rem;
+  background: rgba(100, 108, 255, 0.06);
+  border: 1px solid rgba(100, 108, 255, 0.15);
+  border-radius: 8px;
+  transition: background-color 0.2s, border-color 0.2s;
 }
 
-.post-comment:last-child {
-  border-bottom: none;
+.post-comment:hover {
+  background: rgba(100, 108, 255, 0.09);
+  border-color: rgba(100, 108, 255, 0.22);
+}
+
+.post-comment-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
 }
 
 .post-comment-author {
   font-weight: 600;
   font-size: 0.9rem;
-  margin-right: 0.5rem;
+  color: rgba(100, 108, 255, 0.95);
 }
 
 .post-comment-date {
@@ -205,14 +220,46 @@
 }
 
 .post-comment-text {
-  margin: 0.25rem 0 0 0;
+  margin: 0;
   font-size: 0.95rem;
+  line-height: 1.5;
   white-space: pre-wrap;
+  color: rgba(0, 0, 0, 0.85);
 }
 
-.post-comments-loading,
+.post-comments-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1.5rem;
+}
+
+.post-comments-spinner {
+  width: 28px;
+  height: 28px;
+  border: 2px solid rgba(100, 108, 255, 0.2);
+  border-top-color: #646cff;
+  border-radius: 50%;
+  animation: post-comments-spin 0.8s linear infinite;
+}
+
+@keyframes post-comments-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.post-comments-loading-text {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #666;
+}
+
 .post-comments-empty {
   margin: 0;
+  padding: 1rem;
   font-size: 0.9rem;
   color: #666;
 }
@@ -249,15 +296,34 @@
   }
 
   .post-comment {
-    border-bottom-color: rgba(63, 63, 70, 0.4);
+    background: rgba(99, 102, 241, 0.1);
+    border-color: rgba(99, 102, 241, 0.25);
+  }
+
+  .post-comment:hover {
+    background: rgba(99, 102, 241, 0.14);
+    border-color: rgba(99, 102, 241, 0.35);
+  }
+
+  .post-comment-author {
+    color: rgba(165, 180, 252, 0.95);
   }
 
   .post-comment-date {
     color: #a1a1aa;
   }
 
-  .post-comments-loading,
+  .post-comment-text {
+    color: rgba(255, 255, 255, 0.88);
+  }
+
+  .post-comments-loading-text,
   .post-comments-empty {
     color: #a1a1aa;
+  }
+
+  .post-comments-spinner {
+    border-color: rgba(99, 102, 241, 0.3);
+    border-top-color: #818cf8;
   }
 }

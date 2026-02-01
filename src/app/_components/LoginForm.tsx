@@ -46,7 +46,14 @@ function LoginForm({ onSubmit, isLoading = false, error }: LoginFormProps) {
         />
       </div>
       <button type="submit" className="login-form__submit" disabled={isLoading}>
-        {isLoading ? 'Logging in…' : 'Log In'}
+        {isLoading ? (
+          <>
+            <span className="login-form__spinner" aria-hidden />
+            Logging in…
+          </>
+        ) : (
+          'Log In'
+        )}
       </button>
     </form>
   );

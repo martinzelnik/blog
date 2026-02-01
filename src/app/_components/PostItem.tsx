@@ -255,15 +255,20 @@ function PostItem({ post, onDelete, isDeleting = false, onLikeToggle, onCommentA
             </form>
           )}
           {commentsLoading ? (
-            <p className="post-comments-loading">Loading comments…</p>
+            <div className="post-comments-loading" role="status" aria-live="polite">
+              <div className="post-comments-spinner" aria-hidden />
+              <p className="post-comments-loading-text">Loading comments…</p>
+            </div>
           ) : comments.length === 0 ? (
             <p className="post-comments-empty">No comments yet.</p>
           ) : (
             <ul className="post-comment-list">
               {comments.map((c) => (
                 <li key={c.id} className="post-comment">
-                  <span className="post-comment-author">{c.username}</span>
-                  <span className="post-comment-date">{formatCommentDate(c.createdAt)}</span>
+                  <div className="post-comment-header">
+                    <span className="post-comment-author">{c.username}</span>
+                    <span className="post-comment-date">{formatCommentDate(c.createdAt)}</span>
+                  </div>
                   <p className="post-comment-text">{c.text}</p>
                 </li>
               ))}

@@ -14,8 +14,10 @@ export function AppHeader() {
             <button className="login-button" onClick={logout}>
               Log Out
             </button>
-            <span className="page-header__auth-label">Logged in as</span>
-            <span className="page-header__auth-username">{user.username}</span>
+            <span className="page-header__auth-user">
+              <span className="page-header__auth-label">Logged in as</span>
+              <span className="page-header__auth-username">{user.username}</span>
+            </span>
           </div>
         ) : (
           <>
