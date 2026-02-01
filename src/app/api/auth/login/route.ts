@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import User from '@/models/User';
+import { createToken } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,10 +36,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Return user info (without password)
+    const token = await createToken({
+      userId: user._id.toString(),
+      username: user.username,
+    });
+
     return NextResponse.json({
       id: user._id.toString(),
       username: user.username,
+      token,
       message: 'Login successful',
     });
   } catch (err) {

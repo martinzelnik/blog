@@ -2,6 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import mongoose from 'mongoose';
 import dbConnect from '@/lib/db';
 import Post from '@/models/Post';
+import { getAuthTokenFromRequest, verifyToken } from '@/lib/auth';
+
+async function requireAuth(request: Request): Promise<NextResponse | null> {
+  const token = getAuthTokenFromRequest(request);
+  if (!token) {
+    return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+  }
+  const payload = await verifyToken(token);
+  if (!payload) {
+    return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 });
+  }
+  return null;
+}
 
 export async function GET(
   _request: NextRequest,
@@ -35,9 +48,12 @@ export async function GET(
 }
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authError = await requireAuth(request);
+  if (authError) return authError;
+
   try {
     const { id } = await params;
     if (!mongoose.Types.ObjectId.isValid(id)) {

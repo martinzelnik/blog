@@ -14,7 +14,7 @@ async function fetchPosts(): Promise<Post[]> {
 }
 
 export default function HomePage() {
-  const { user } = useAuth();
+  const { user, token, logout } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [posting, setPosting] = useState(false);
@@ -41,11 +41,19 @@ export default function HomePage() {
   const addPost = async (data: Omit<Post, 'id'>) => {
     setPosting(true);
     try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers.Authorization = `Bearer ${token}`;
+
       const res = await fetch('/api/posts', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(data),
       });
+      if (res.status === 401) {
+        logout();
+        setError('Session expired. Please log in again.');
+        return;
+      }
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.error ?? 'Failed to create post');
@@ -62,7 +70,18 @@ export default function HomePage() {
   const deletePost = async (id: string) => {
     setDeletingId(id);
     try {
-      const res = await fetch(`/api/posts/${id}`, { method: 'DELETE' });
+      const headers: Record<string, string> = {};
+      if (token) headers.Authorization = `Bearer ${token}`;
+
+      const res = await fetch(`/api/posts/${id}`, {
+        method: 'DELETE',
+        headers,
+      });
+      if (res.status === 401) {
+        logout();
+        setError('Session expired. Please log in again.');
+        return;
+      }
       if (!res.ok) throw new Error('Failed to delete post');
       setPosts((prev) => prev.filter((p) => p.id !== id));
     } catch (e) {
