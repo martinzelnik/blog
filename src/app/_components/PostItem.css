@@ -15,20 +15,19 @@
 }
 
 .post-content-wrapper {
-  display: flex;
-  gap: 1rem;
-  align-items: flex-start;
+  overflow: hidden;
 }
 
 .post-text {
-  flex: 1;
   margin: 0;
 }
 
 .post-image {
+  float: left;
   width: 200px;
   height: auto;
   border-radius: 4px;
   object-fit: cover;
-  flex-shrink: 0;
+  margin-right: 1rem;
+  margin-bottom: 0.5rem;
 }

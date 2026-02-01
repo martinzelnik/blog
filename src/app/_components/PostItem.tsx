@@ -26,8 +26,8 @@ function PostItem({ post, onDelete, isDeleting = false }: PostProps) {
       <h2>{post.title}</h2>
       <p className="date">{post.date}</p>
       <div className="post-content-wrapper">
-        <p className="post-text">{post.content}</p>
         {post.image && <img src={post.image} alt={post.title} className="post-image" />}
+        <p className="post-text">{post.content}</p>
       </div>
     </article>
   );
