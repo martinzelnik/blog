@@ -21,13 +21,19 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   login: (username: string, password: string) => Promise<void>;
+  signUp: (username: string, password: string) => Promise<void>;
   logout: () => void;
   refreshToken: () => void;
   isLoginModalOpen: boolean;
   openLoginModal: () => void;
   closeLoginModal: () => void;
+  isSignUpModalOpen: boolean;
+  openSignUpModal: () => void;
+  closeSignUpModal: () => void;
   loginLoading: boolean;
   loginError: string | null;
+  signUpLoading: boolean;
+  signUpError: string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -73,6 +79,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
+  const [signUpLoading, setSignUpLoading] = useState(false);
+  const [signUpError, setSignUpError] = useState<string | null>(null);
 
   const login = useCallback(async (username: string, password: string) => {
     setLoginLoading(true);
@@ -97,6 +106,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoginError(e instanceof Error ? e.message : 'Login failed');
     } finally {
       setLoginLoading(false);
+    }
+  }, []);
+
+  const signUp = useCallback(async (username: string, password: string) => {
+    setSignUpLoading(true);
+    setSignUpError(null);
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: username.trim(), password }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Sign up failed');
+      }
+      const userData = { id: data.id, username: data.username };
+      const authData: StoredAuth = { user: userData, token: data.token };
+      setUser(userData);
+      setToken(data.token);
+      setStoredAuth(authData);
+      setIsSignUpModalOpen(false);
+    } catch (e) {
+      setSignUpError(e instanceof Error ? e.message : 'Sign up failed');
+    } finally {
+      setSignUpLoading(false);
     }
   }, []);
 
@@ -158,19 +193,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoginError(null);
   }, []);
 
+  const openSignUpModal = useCallback(() => {
+    setSignUpError(null);
+    setIsSignUpModalOpen(true);
+  }, []);
+
+  const closeSignUpModal = useCallback(() => {
+    setIsSignUpModalOpen(false);
+    setSignUpError(null);
+  }, []);
+
   return (
     <AuthContext.Provider
       value={{
         user,
         token,
         login,
+        signUp,
         refreshToken,
         logout,
         isLoginModalOpen,
         openLoginModal,
         closeLoginModal,
+        isSignUpModalOpen,
+        openSignUpModal,
+        closeSignUpModal,
         loginLoading,
         loginError,
+        signUpLoading,
+        signUpError,
       }}
     >
       {children}
