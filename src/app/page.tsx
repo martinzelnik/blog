@@ -41,33 +41,50 @@ export default function HomePage() {
   }, [loadPosts]);
 
   const addPost = async (data: Omit<Post, 'id'>) => {
+    const tempId = `pending-${Date.now()}`;
+    const optimisticPost: Post = {
+      id: tempId,
+      ...data,
+      likeCount: 0,
+      likedByMe: false,
+      commentCount: 0,
+    };
+    setPosts((prev) => [optimisticPost, ...prev]);
+    setError(null);
     setPosting(true);
-    try {
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (token) headers.Authorization = `Bearer ${token}`;
+    (async () => {
+      try {
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+        if (token) headers.Authorization = `Bearer ${token}`;
 
-      const res = await fetch('/api/posts', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(data),
-      });
-      if (res.status === 401) {
-        logout();
-        setError('Session expired. Please log in again.');
-        throw new Error('Session expired');
+        const res = await fetch('/api/posts', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(data),
+        });
+        if (res.status === 401) {
+          logout();
+          setError('Session expired. Please log in again.');
+          setPosts((prev) => prev.filter((p) => p.id !== tempId));
+          return;
+        }
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          setError(err.error ?? 'Failed to create post');
+          setPosts((prev) => prev.filter((p) => p.id !== tempId));
+          return;
+        }
+        const newPost: Post = await res.json();
+        setPosts((prev) =>
+          prev.map((p) => (p.id === tempId ? newPost : p))
+        );
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Failed to add post');
+        setPosts((prev) => prev.filter((p) => p.id !== tempId));
+      } finally {
+        setPosting(false);
       }
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error ?? 'Failed to create post');
-      }
-      const newPost: Post = await res.json();
-      setPosts((prev) => [newPost, ...prev]);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to add post');
-      throw e;
-    } finally {
-      setPosting(false);
-    }
+    })();
   };
 
   const deletePost = async (id: string) => {
@@ -102,11 +119,11 @@ export default function HomePage() {
     );
   };
 
-  const handleCommentAdded = (postId: string) => {
+  const handleCommentAdded = (postId: string, delta: number) => {
     setPosts((prev) =>
       prev.map((p) =>
         p.id === postId
-          ? { ...p, commentCount: (p.commentCount ?? 0) + 1 }
+          ? { ...p, commentCount: (p.commentCount ?? 0) + delta }
           : p
       )
     );

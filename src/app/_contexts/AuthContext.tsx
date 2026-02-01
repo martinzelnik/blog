@@ -81,13 +81,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(auth.user);
     setToken(auth.token);
 
-    // Sync user (especially role) from DB so admin role changes take effect without re-login
+    // Validate token and sync user (especially role) from DB; clear auth if token invalid/expired
     (async () => {
       try {
         const res = await fetch('/api/auth/me', {
           headers: { Authorization: `Bearer ${auth.token}` },
         });
-        if (!res.ok) return;
+        if (!res.ok) {
+          setUser(null);
+          setToken(null);
+          setStoredAuth(null);
+          return;
+        }
         const data = await res.json();
         const syncedUser: User = {
           id: data.id,
@@ -97,7 +102,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(syncedUser);
         setStoredAuth({ user: syncedUser, token: auth.token });
       } catch {
-        // ignore
+        setUser(null);
+        setToken(null);
+        setStoredAuth(null);
       }
     })();
   }, []);

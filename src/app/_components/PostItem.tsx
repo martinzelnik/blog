@@ -43,7 +43,7 @@ interface PostProps {
   onDelete: (id: string) => void;
   isDeleting?: boolean;
   onLikeToggle?: (postId: string, liked: boolean, likeCount: number) => void;
-  onCommentAdded?: (postId: string) => void;
+  onCommentAdded?: (postId: string, delta: number) => void;
 }
 
 function PostItem({ post, onDelete, isDeleting = false, onLikeToggle, onCommentAdded }: PostProps) {
@@ -96,6 +96,11 @@ function PostItem({ post, onDelete, isDeleting = false, onLikeToggle, onCommentA
 
   const handleLike = async () => {
     if (!user || !token || liking) return;
+    const nextLiked = !likedByMe;
+    const nextCount = likeCount + (nextLiked ? 1 : -1);
+    setLikedByMe(nextLiked);
+    setLikeCount(nextCount);
+    onLikeToggle?.(post.id, nextLiked, nextCount);
     setLiking(true);
     try {
       const res = await fetch(`/api/posts/${post.id}/like`, {
@@ -103,7 +108,12 @@ function PostItem({ post, onDelete, isDeleting = false, onLikeToggle, onCommentA
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.status === 401) return;
-      if (!res.ok) return;
+      if (!res.ok) {
+        setLikedByMe(likedByMe);
+        setLikeCount(likeCount);
+        onLikeToggle?.(post.id, likedByMe, likeCount);
+        return;
+      }
       const data = await res.json();
       setLikedByMe(data.liked);
       setLikeCount(data.likeCount);
@@ -116,6 +126,18 @@ function PostItem({ post, onDelete, isDeleting = false, onLikeToggle, onCommentA
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !token || !commentText.trim() || submittingComment) return;
+    const text = commentText.trim();
+    const optimisticComment: Comment = {
+      id: `pending-${Date.now()}`,
+      postId: post.id,
+      userId: user.id,
+      username: user.username,
+      text,
+      createdAt: new Date().toISOString(),
+    };
+    setComments((prev) => [...prev, optimisticComment]);
+    setCommentText('');
+    onCommentAdded?.(post.id, 1);
     setSubmittingComment(true);
     try {
       const res = await fetch(`/api/posts/${post.id}/comments`, {
@@ -124,13 +146,17 @@ function PostItem({ post, onDelete, isDeleting = false, onLikeToggle, onCommentA
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ text: commentText.trim() }),
+        body: JSON.stringify({ text }),
       });
-      if (res.status === 401 || !res.ok) return;
+      if (res.status === 401 || !res.ok) {
+        setComments((prev) => prev.filter((c) => c.id !== optimisticComment.id));
+        onCommentAdded?.(post.id, -1);
+        return;
+      }
       const newComment = await res.json();
-      setComments((prev) => [...prev, newComment]);
-      setCommentText('');
-      onCommentAdded?.(post.id);
+      setComments((prev) =>
+        prev.map((c) => (c.id === optimisticComment.id ? newComment : c))
+      );
     } finally {
       setSubmittingComment(false);
     }

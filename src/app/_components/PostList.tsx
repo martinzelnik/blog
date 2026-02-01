@@ -7,7 +7,7 @@ interface PostListProps {
   onDelete: (id: string) => void;
   deletingId: string | null;
   onLikeToggle?: (postId: string, liked: boolean, likeCount: number) => void;
-  onCommentAdded?: (postId: string) => void;
+  onCommentAdded?: (postId: string, delta: number) => void;
 }
 
 function PostList({ posts, onDelete, deletingId, onLikeToggle, onCommentAdded }: PostListProps) {
