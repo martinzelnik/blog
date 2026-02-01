@@ -27,6 +27,9 @@ export default async function dbConnect(): Promise<typeof mongoose> {
   }
 
   if (!cached.promise) {
+    if (!MONGODB_URI) {
+      throw new Error('Please define MONGODB_URI in .env.local');
+    }
     cached.promise = mongoose.connect(MONGODB_URI, { bufferCommands: false });
   }
 
