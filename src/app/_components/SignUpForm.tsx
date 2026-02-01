@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import './SignUpForm.css';
+import { LoadingButton } from './LoadingButton';
 
 interface SignUpFormProps {
   onSubmit?: (username: string, password: string) => Promise<void>;
@@ -66,20 +67,15 @@ function SignUpForm({ onSubmit, isLoading = false, error }: SignUpFormProps) {
           <p className="signup-form__hint">Passwords do not match</p>
         )}
       </div>
-      <button
+      <LoadingButton
         type="submit"
         className="signup-form__submit"
-        disabled={isLoading || !passwordsMatch}
+        loading={isLoading}
+        loadingText="Signing up…"
+        disabled={!passwordsMatch}
       >
-        {isLoading ? (
-          <>
-            <span className="signup-form__spinner" aria-hidden />
-            Signing up…
-          </>
-        ) : (
-          'Sign Up'
-        )}
-      </button>
+        Sign Up
+      </LoadingButton>
     </form>
   );
 }

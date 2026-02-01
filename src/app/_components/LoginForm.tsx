@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import './LoginForm.css';
+import { LoadingButton } from './LoadingButton';
 
 interface LoginFormProps {
   onSubmit?: (username: string, password: string) => Promise<void>;
@@ -45,16 +46,14 @@ function LoginForm({ onSubmit, isLoading = false, error }: LoginFormProps) {
           disabled={isLoading}
         />
       </div>
-      <button type="submit" className="login-form__submit" disabled={isLoading}>
-        {isLoading ? (
-          <>
-            <span className="login-form__spinner" aria-hidden />
-            Logging in…
-          </>
-        ) : (
-          'Log In'
-        )}
-      </button>
+      <LoadingButton
+        type="submit"
+        className="login-form__submit"
+        loading={isLoading}
+        loadingText="Logging in…"
+      >
+        Log In
+      </LoadingButton>
     </form>
   );
 }

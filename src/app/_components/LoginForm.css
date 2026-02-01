@@ -30,42 +30,7 @@
 }
 
 .login-form__submit {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  background: var(--btn-primary-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  color: var(--btn-primary-color);
-  border: var(--btn-primary-border);
-  border-radius: var(--btn-radius);
-  cursor: pointer;
-  font-size: var(--btn-font-size-lg);
-  font-weight: var(--btn-font-weight);
-  font-family: inherit;
   margin-top: 0.5rem;
-  transition: var(--btn-transition);
-}
-
-.login-form__spinner {
-  width: 18px;
-  height: 18px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: #fff;
-  border-radius: 50%;
-  animation: loading-spin 0.8s linear infinite;
-}
-
-.login-form__submit:hover {
-  background: var(--btn-primary-hover-bg);
-  border-color: var(--btn-primary-hover-border);
-}
-
-.login-form__submit:disabled {
-  opacity: var(--btn-disabled-opacity);
-  cursor: not-allowed;
 }
 
 @media (prefers-color-scheme: dark) {
