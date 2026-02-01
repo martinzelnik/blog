@@ -36,7 +36,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const role = (user as { role?: string }).role === 'admin' ? 'admin' : 'user';
+    const dbRole = user.get('role');
+    const role = dbRole === 'admin' ? 'admin' : 'user';
     const token = await createToken({
       userId: user._id.toString(),
       username: user.username,

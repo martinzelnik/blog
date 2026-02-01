@@ -143,6 +143,22 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+.page-header__auth-logged-in {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.page-header__auth-label {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.page-header__auth-username {
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+}
+
 .page-header .user-info {
   grid-column: 1;
   justify-self: start;
@@ -176,6 +192,14 @@ button:focus-visible {
 }
 
 @media (prefers-color-scheme: light) {
+  .page-header__auth-label {
+    color: #6b7280;
+  }
+
+  .page-header__auth-username {
+    color: #111827;
+  }
+
   .page-header .user-info__name {
     color: #111827;
   }

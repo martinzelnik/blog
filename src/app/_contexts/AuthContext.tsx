@@ -18,15 +18,12 @@ interface StoredAuth {
 
 const STORAGE_KEY = 'blog_auth';
 
-const REFRESH_DEBOUNCE_MS = 60000; // Refresh at most once per minute
-
 interface AuthContextType {
   user: User | null;
   token: string | null;
   login: (username: string, password: string) => Promise<void>;
   signUp: (username: string, password: string) => Promise<void>;
   logout: () => void;
-  refreshToken: () => void;
   isLoginModalOpen: boolean;
   openLoginModal: () => void;
   closeLoginModal: () => void;
@@ -79,10 +76,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const auth = getStoredAuth();
-    if (auth) {
-      setUser(auth.user);
-      setToken(auth.token);
-    }
+    if (!auth) return;
+
+    setUser(auth.user);
+    setToken(auth.token);
+
+    // Sync user (especially role) from DB so admin role changes take effect without re-login
+    (async () => {
+      try {
+        const res = await fetch('/api/auth/me', {
+          headers: { Authorization: `Bearer ${auth.token}` },
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        const syncedUser: User = {
+          id: data.id,
+          username: data.username,
+          role: data.role === 'admin' ? 'admin' : 'user',
+        };
+        setUser(syncedUser);
+        setStoredAuth({ user: syncedUser, token: auth.token });
+      } catch {
+        // ignore
+      }
+    })();
   }, []);
 
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -158,52 +175,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStoredAuth(null);
   }, []);
 
-  const refreshToken = useCallback(async () => {
-    const currentToken = getStoredAuth()?.token;
-    if (!currentToken) return;
-
-    try {
-      const res = await fetch('/api/auth/refresh', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${currentToken}` },
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        logout();
-        return;
-      }
-      const authData: StoredAuth = {
-        user: {
-          id: data.id,
-          username: data.username,
-          role: data.role === 'admin' ? 'admin' : 'user',
-        },
-        token: data.token,
-      };
-      setUser(authData.user);
-      setToken(data.token);
-      setStoredAuth(authData);
-    } catch {
-      logout();
-    }
-  }, [logout]);
-
-  useEffect(() => {
-    if (!user || !token) return;
-
-    let lastRefresh = 0;
-    const debouncedRefresh = () => {
-      const now = Date.now();
-      if (now - lastRefresh < REFRESH_DEBOUNCE_MS) return;
-      lastRefresh = now;
-      refreshToken();
-    };
-
-    const events = ['mousedown', 'keydown', 'scroll', 'touchstart'];
-    events.forEach((ev) => window.addEventListener(ev, debouncedRefresh));
-    return () => events.forEach((ev) => window.removeEventListener(ev, debouncedRefresh));
-  }, [user, token, refreshToken]);
-
   const openLoginModal = useCallback(() => {
     setLoginError(null);
     setIsLoginModalOpen(true);
@@ -231,7 +202,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         token,
         login,
         signUp,
-        refreshToken,
         logout,
         isLoginModalOpen,
         openLoginModal,
