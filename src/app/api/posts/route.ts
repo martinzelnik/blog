@@ -1,20 +1,45 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Post from '@/models/Post';
-import { requireAdmin } from '@/lib/auth';
+import Comment from '@/models/Comment';
+import { requireAdmin, getAuthTokenFromRequest, verifyToken } from '@/lib/auth';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     await dbConnect();
+    const token = getAuthTokenFromRequest(request);
+    const payload = token ? await verifyToken(token) : null;
+    const userId = payload?.userId ?? null;
+
     const posts = await Post.find({}).sort({ createdAt: -1 }).lean();
-    const serialized = posts.map((p) => ({
-      id: p._id.toString(),
-      title: p.title,
-      content: p.content,
-      date: p.date,
-      image: p.image,
-      language: p.language,
-    }));
+    const postIds = posts.map((p) => p._id);
+
+    const commentCounts = await Comment.aggregate([
+      { $match: { post: { $in: postIds } } },
+      { $group: { _id: '$post', count: { $sum: 1 } } },
+    ]);
+    const countByPost = Object.fromEntries(
+      commentCounts.map((c) => [c._id.toString(), c.count])
+    );
+
+    const serialized = posts.map((p) => {
+      const likedBy = (p as { likedBy?: unknown[] }).likedBy ?? [];
+      const likeCount = likedBy.length;
+      const likedByMe = userId
+        ? likedBy.some((id) => id?.toString() === userId)
+        : false;
+      return {
+        id: p._id.toString(),
+        title: p.title,
+        content: p.content,
+        date: p.date,
+        image: p.image,
+        language: p.language,
+        likeCount,
+        likedByMe,
+        commentCount: countByPost[p._id.toString()] ?? 0,
+      };
+    });
     return NextResponse.json(serialized);
   } catch (err) {
     console.error('GET /api/posts:', err);
@@ -63,6 +88,9 @@ export async function POST(request: NextRequest) {
       date: post.date,
       image: post.image,
       language: post.language,
+      likeCount: 0,
+      likedByMe: false,
+      commentCount: 0,
     });
   } catch (err) {
     console.error('POST /api/posts:', err);

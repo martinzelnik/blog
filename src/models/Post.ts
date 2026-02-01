@@ -7,6 +7,7 @@ export interface IPost {
   date: string;
   image?: string;
   language: 'en' | 'cs';
+  likedBy?: mongoose.Types.ObjectId[];
 }
 
 const PostSchema = new mongoose.Schema<IPost>(
@@ -16,6 +17,7 @@ const PostSchema = new mongoose.Schema<IPost>(
     date: { type: String, required: true },
     image: { type: String, required: false },
     language: { type: String, enum: ['en', 'cs'], required: true },
+    likedBy: { type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], default: () => [] },
   },
   { timestamps: true, collection: 'posts' }
 );

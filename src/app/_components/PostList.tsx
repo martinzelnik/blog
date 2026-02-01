@@ -6,9 +6,11 @@ interface PostListProps {
   posts: Post[];
   onDelete: (id: string) => void;
   deletingId: string | null;
+  onLikeToggle?: (postId: string, liked: boolean, likeCount: number) => void;
+  onCommentAdded?: (postId: string) => void;
 }
 
-function PostList({ posts, onDelete, deletingId }: PostListProps) {
+function PostList({ posts, onDelete, deletingId, onLikeToggle, onCommentAdded }: PostListProps) {
   const { language } = useLanguage();
   const filteredPosts = posts.filter(post => post.language === language);
 
@@ -20,6 +22,8 @@ function PostList({ posts, onDelete, deletingId }: PostListProps) {
           post={post}
           onDelete={onDelete}
           isDeleting={deletingId === post.id}
+          onLikeToggle={onLikeToggle}
+          onCommentAdded={onCommentAdded}
         />
       ))}
     </main>

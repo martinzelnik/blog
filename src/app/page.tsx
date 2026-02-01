@@ -7,8 +7,10 @@ import Modal from '@/app/_components/Modal';
 import { useAuth } from '@/app/_contexts/AuthContext';
 import type { Post } from '@/app/_components/PostItem';
 
-async function fetchPosts(): Promise<Post[]> {
-  const res = await fetch('/api/posts');
+async function fetchPosts(token: string | null): Promise<Post[]> {
+  const headers: Record<string, string> = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch('/api/posts', { headers });
   if (!res.ok) throw new Error('Failed to fetch posts');
   return res.json();
 }
@@ -25,14 +27,14 @@ export default function HomePage() {
   const loadPosts = useCallback(async () => {
     try {
       setError(null);
-      const data = await fetchPosts();
+      const data = await fetchPosts(token);
       setPosts(data);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load posts');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [token]);
 
   useEffect(() => {
     loadPosts();
@@ -92,6 +94,24 @@ export default function HomePage() {
     }
   };
 
+  const handleLikeToggle = (postId: string, liked: boolean, likeCount: number) => {
+    setPosts((prev) =>
+      prev.map((p) =>
+        p.id === postId ? { ...p, likedByMe: liked, likeCount } : p
+      )
+    );
+  };
+
+  const handleCommentAdded = (postId: string) => {
+    setPosts((prev) =>
+      prev.map((p) =>
+        p.id === postId
+          ? { ...p, commentCount: (p.commentCount ?? 0) + 1 }
+          : p
+      )
+    );
+  };
+
   return (
       <>
         {error && <p role="alert" style={{ color: 'red' }}>{error}</p>}
@@ -109,7 +129,13 @@ export default function HomePage() {
             <p className="loading-spinner__text">Loading posts…</p>
           </div>
         ) : (
-          <PostList posts={posts} onDelete={deletePost} deletingId={deletingId} />
+          <PostList
+            posts={posts}
+            onDelete={deletePost}
+            deletingId={deletingId}
+            onLikeToggle={handleLikeToggle}
+            onCommentAdded={handleCommentAdded}
+          />
         )}
         <Modal 
           isOpen={isModalOpen} 

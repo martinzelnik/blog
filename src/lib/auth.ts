@@ -42,7 +42,7 @@ export function getAuthTokenFromRequest(request: Request): string | null {
   return authHeader.slice(7).trim() || null;
 }
 
-export async function requireAdmin(
+export async function requireAuth(
   request: Request
 ): Promise<{ payload: TokenPayload } | NextResponse> {
   const token = getAuthTokenFromRequest(request);
@@ -53,8 +53,16 @@ export async function requireAdmin(
   if (!payload) {
     return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 });
   }
-  if (payload.role !== 'admin') {
+  return { payload };
+}
+
+export async function requireAdmin(
+  request: Request
+): Promise<{ payload: TokenPayload } | NextResponse> {
+  const result = await requireAuth(request);
+  if (result instanceof NextResponse) return result;
+  if (result.payload.role !== 'admin') {
     return NextResponse.json({ error: 'Admin role required' }, { status: 403 });
   }
-  return { payload };
+  return result;
 }
