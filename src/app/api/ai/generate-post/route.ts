@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import axios from 'axios';
 import { requireAdmin } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
@@ -63,47 +64,35 @@ Write in English only.`;
       : 'Analyze this image and generate a blog post. Return only valid JSON.';
 
   try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: systemPrompt }] },
-          contents: [
-            {
-              parts: [
-                {
-                  inline_data: {
-                    mime_type: mimeType || 'image/jpeg',
-                    data: base64Data,
-                  },
-                },
-                { text: userPrompt },
-              ],
-            },
-          ],
-          generation_config: {
-            max_output_tokens: 1024,
-          },
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      const err = await response.text();
-      console.error('Gemini API error:', response.status, err);
-      return NextResponse.json(
-        { error: 'Failed to generate content from image' },
-        { status: 502 }
-      );
-    }
-
-    const data = (await response.json()) as {
+    const response = await axios.post<{
       candidates?: Array<{
         content?: { parts?: Array<{ text?: string }> };
       }>;
-    };
+    }>(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      {
+        system_instruction: { parts: [{ text: systemPrompt }] },
+        contents: [
+          {
+            parts: [
+              {
+                inline_data: {
+                  mime_type: mimeType || 'image/jpeg',
+                  data: base64Data,
+                },
+              },
+              { text: userPrompt },
+            ],
+          },
+        ],
+        generation_config: {
+          max_output_tokens: 1024,
+        },
+      },
+      { headers: { 'Content-Type': 'application/json' } }
+    );
+
+    const data = response.data;
     const raw = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
     if (!raw) {
       return NextResponse.json(
@@ -125,6 +114,13 @@ Write in English only.`;
 
     return NextResponse.json({ title, content });
   } catch (err) {
+    if (axios.isAxiosError(err) && err.response) {
+      console.error('Gemini API error:', err.response.status, err.response.data);
+      return NextResponse.json(
+        { error: 'Failed to generate content from image' },
+        { status: 502 }
+      );
+    }
     console.error('POST /api/ai/generate-post:', err);
     return NextResponse.json(
       { error: 'Failed to generate post content' },

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import axios from 'axios';
 import './PostItem.css';
 import DeleteButton from './DeleteButton';
 import { useAuth } from '@/app/_contexts/AuthContext';
@@ -75,10 +76,10 @@ function PostItem({ post, onDelete, isDeleting = false, onLikeToggle, onCommentA
   const fetchComments = useCallback(async () => {
     setCommentsLoading(true);
     try {
-      const res = await fetch(`/api/posts/${post.id}/comments`);
-      if (!res.ok) return;
-      const data = await res.json();
-      setComments(data);
+      const res = await axios.get<Comment[]>(`/api/posts/${post.id}/comments`);
+      setComments(res.data);
+    } catch {
+      // ignore
     } finally {
       setCommentsLoading(false);
     }
@@ -103,21 +104,20 @@ function PostItem({ post, onDelete, isDeleting = false, onLikeToggle, onCommentA
     onLikeToggle?.(post.id, nextLiked, nextCount);
     setLiking(true);
     try {
-      const res = await fetch(`/api/posts/${post.id}/like`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.status === 401) return;
-      if (!res.ok) {
-        setLikedByMe(likedByMe);
-        setLikeCount(likeCount);
-        onLikeToggle?.(post.id, likedByMe, likeCount);
-        return;
-      }
-      const data = await res.json();
+      const res = await axios.post<{ liked: boolean; likeCount: number }>(
+        `/api/posts/${post.id}/like`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const data = res.data;
       setLikedByMe(data.liked);
       setLikeCount(data.likeCount);
       onLikeToggle?.(post.id, data.liked, data.likeCount);
+    } catch (e) {
+      if (axios.isAxiosError(e) && e.response?.status === 401) return;
+      setLikedByMe(likedByMe);
+      setLikeCount(likeCount);
+      onLikeToggle?.(post.id, likedByMe, likeCount);
     } finally {
       setLiking(false);
     }
@@ -140,23 +140,23 @@ function PostItem({ post, onDelete, isDeleting = false, onLikeToggle, onCommentA
     onCommentAdded?.(post.id, 1);
     setSubmittingComment(true);
     try {
-      const res = await fetch(`/api/posts/${post.id}/comments`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ text }),
-      });
-      if (res.status === 401 || !res.ok) {
-        setComments((prev) => prev.filter((c) => c.id !== optimisticComment.id));
-        onCommentAdded?.(post.id, -1);
-        return;
-      }
-      const newComment = await res.json();
+      const res = await axios.post<Comment>(
+        `/api/posts/${post.id}/comments`,
+        { text },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const newComment = res.data;
       setComments((prev) =>
         prev.map((c) => (c.id === optimisticComment.id ? newComment : c))
       );
+    } catch {
+      setComments((prev) => prev.filter((c) => c.id !== optimisticComment.id));
+      onCommentAdded?.(post.id, -1);
     } finally {
       setSubmittingComment(false);
     }

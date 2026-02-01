@@ -2,6 +2,7 @@
 'use client';
 
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
+import axios from 'axios';
 
 export type UserRole = 'user' | 'admin';
 
@@ -84,16 +85,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Validate token and sync user (especially role) from DB; clear auth if token invalid/expired
     (async () => {
       try {
-        const res = await fetch('/api/auth/me', {
+        const res = await axios.get('/api/auth/me', {
           headers: { Authorization: `Bearer ${auth.token}` },
         });
-        if (!res.ok) {
-          setUser(null);
-          setToken(null);
-          setStoredAuth(null);
-          return;
-        }
-        const data = await res.json();
+        const data = res.data;
         const syncedUser: User = {
           id: data.id,
           username: data.username,
@@ -120,15 +115,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoginLoading(true);
     setLoginError(null);
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Login failed');
-      }
+      const res = await axios.post('/api/auth/login', { username, password });
+      const data = res.data;
       const userData: User = {
         id: data.id,
         username: data.username,
@@ -140,7 +128,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setStoredAuth(authData);
       setIsLoginModalOpen(false);
     } catch (e) {
-      setLoginError(e instanceof Error ? e.message : 'Login failed');
+      setLoginError(
+        axios.isAxiosError(e) ? (e.response?.data as { error?: string })?.error ?? 'Login failed' : e instanceof Error ? e.message : 'Login failed'
+      );
     } finally {
       setLoginLoading(false);
     }
@@ -150,15 +140,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSignUpLoading(true);
     setSignUpError(null);
     try {
-      const res = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: username.trim(), password }),
+      const res = await axios.post('/api/auth/register', {
+        username: username.trim(),
+        password,
       });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Sign up failed');
-      }
+      const data = res.data;
       const userData: User = {
         id: data.id,
         username: data.username,
@@ -170,7 +156,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setStoredAuth(authData);
       setIsSignUpModalOpen(false);
     } catch (e) {
-      setSignUpError(e instanceof Error ? e.message : 'Sign up failed');
+      setSignUpError(
+        axios.isAxiosError(e) ? (e.response?.data as { error?: string })?.error ?? 'Sign up failed' : e instanceof Error ? e.message : 'Sign up failed'
+      );
     } finally {
       setSignUpLoading(false);
     }

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import axios from 'axios';
 import PostList from '@/app/_components/PostList';
 import AddPostForm from '@/app/_components/AddPostForm';
 import Modal from '@/app/_components/Modal';
@@ -10,9 +11,8 @@ import type { Post } from '@/app/_components/PostItem';
 async function fetchPosts(token: string | null): Promise<Post[]> {
   const headers: Record<string, string> = {};
   if (token) headers.Authorization = `Bearer ${token}`;
-  const res = await fetch('/api/posts', { headers });
-  if (!res.ok) throw new Error('Failed to fetch posts');
-  return res.json();
+  const res = await axios.get<Post[]>('/api/posts', { headers });
+  return res.data;
 }
 
 export default function HomePage() {
@@ -53,33 +53,28 @@ export default function HomePage() {
     setError(null);
     setPosting(true);
     (async () => {
-      try {
-        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-        if (token) headers.Authorization = `Bearer ${token}`;
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers.Authorization = `Bearer ${token}`;
 
-        const res = await fetch('/api/posts', {
-          method: 'POST',
-          headers,
-          body: JSON.stringify(data),
-        });
-        if (res.status === 401) {
-          logout();
-          setError('Session expired. Please log in again.');
-          setPosts((prev) => prev.filter((p) => p.id !== tempId));
-          return;
-        }
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          setError(err.error ?? 'Failed to create post');
-          setPosts((prev) => prev.filter((p) => p.id !== tempId));
-          return;
-        }
-        const newPost: Post = await res.json();
+      try {
+        const res = await axios.post<Post>('/api/posts', data, { headers });
+        const newPost = res.data;
         setPosts((prev) =>
           prev.map((p) => (p.id === tempId ? newPost : p))
         );
       } catch (e) {
-        setError(e instanceof Error ? e.message : 'Failed to add post');
+        if (axios.isAxiosError(e) && e.response?.status === 401) {
+          logout();
+          setError('Session expired. Please log in again.');
+        } else {
+          setError(
+            axios.isAxiosError(e)
+              ? (e.response?.data as { error?: string })?.error ?? 'Failed to create post'
+              : e instanceof Error
+                ? e.message
+                : 'Failed to create post'
+          );
+        }
         setPosts((prev) => prev.filter((p) => p.id !== tempId));
       } finally {
         setPosting(false);
@@ -93,19 +88,15 @@ export default function HomePage() {
       const headers: Record<string, string> = {};
       if (token) headers.Authorization = `Bearer ${token}`;
 
-      const res = await fetch(`/api/posts/${id}`, {
-        method: 'DELETE',
-        headers,
-      });
-      if (res.status === 401) {
-        logout();
-        setError('Session expired. Please log in again.');
-        return;
-      }
-      if (!res.ok) throw new Error('Failed to delete post');
+      await axios.delete(`/api/posts/${id}`, { headers });
       setPosts((prev) => prev.filter((p) => p.id !== id));
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to delete post');
+      if (axios.isAxiosError(e) && e.response?.status === 401) {
+        logout();
+        setError('Session expired. Please log in again.');
+      } else {
+        setError(e instanceof Error ? e.message : 'Failed to delete post');
+      }
     } finally {
       setDeletingId(null);
     }

@@ -1,6 +1,7 @@
 "use client";
 
 import * as Sentry from "@sentry/nextjs";
+import axios from "axios";
 import Head from "next/head";
 import { useEffect, useState } from "react";
 
@@ -78,8 +79,9 @@ export default function Page() {
                 op: "test",
               },
               async () => {
-                const res = await fetch("/api/sentry-example-api");
-                if (!res.ok) {
+                try {
+                  await axios.get("/api/sentry-example-api");
+                } catch {
                   setHasSentError(true);
                 }
               },

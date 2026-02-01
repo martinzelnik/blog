@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import axios from 'axios';
 import './AddPostForm.css';
 import type { Post } from './PostItem';
 import { LoadingButton } from './LoadingButton';
@@ -48,20 +49,20 @@ function AddPostForm({ onAddPost, isPosting = false, onSuccess }: AddPostFormPro
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (token) headers.Authorization = `Bearer ${token}`;
 
-      const res = await fetch('/api/ai/generate-post', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ image, language: postLanguage }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setAiError(data.error ?? 'Failed to generate content');
-        return;
-      }
+      const res = await axios.post<{ title: string; content: string }>(
+        '/api/ai/generate-post',
+        { image, language: postLanguage },
+        { headers }
+      );
+      const data = res.data;
       setTitle(data.title ?? '');
       setContent(data.content ?? '');
-    } catch {
-      setAiError('Failed to generate content');
+    } catch (e) {
+      setAiError(
+        axios.isAxiosError(e)
+          ? (e.response?.data as { error?: string })?.error ?? 'Failed to generate content'
+          : 'Failed to generate content'
+      );
     } finally {
       setIsGenerating(false);
     }
