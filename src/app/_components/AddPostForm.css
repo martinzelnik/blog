@@ -85,8 +85,25 @@
   animation: loading-spin 0.8s linear infinite;
 }
 
+.add-post__image-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
 .image-preview-text {
   color: #28a745;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.add-post__generate-ai {
+  align-self: flex-start;
+}
+
+.add-post__ai-error {
+  color: #dc2626;
   font-size: 0.9rem;
   margin: 0.5rem 0 0 0;
 }
@@ -98,5 +115,9 @@
     background-color: #27272a;
     border-color: #3f3f46;
     color: rgba(255, 255, 255, 0.87);
+  }
+
+  .add-post__ai-error {
+    color: #fca5a5;
   }
 }

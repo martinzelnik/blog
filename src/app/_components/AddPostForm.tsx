@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import './AddPostForm.css';
 import type { Post } from './PostItem';
+import { LoadingButton } from './LoadingButton';
+import { useAuth } from '@/app/_contexts/AuthContext';
 import { useLanguage } from '@/app/_contexts/LanguageContext';
 
 interface AddPostFormProps {
@@ -10,11 +12,14 @@ interface AddPostFormProps {
 }
 
 function AddPostForm({ onAddPost, isPosting = false, onSuccess }: AddPostFormProps) {
+  const { token } = useAuth();
   const { language } = useLanguage();
   const [postLanguage, setPostLanguage] = useState<'en' | 'cs'>(language);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [image, setImage] = useState<string | null>(null);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -23,12 +28,42 @@ function AddPostForm({ onAddPost, isPosting = false, onSuccess }: AddPostFormPro
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    setAiError(null);
     if (file) {
       const reader = new FileReader();
       reader.onload = (event) => {
         setImage(event.target?.result as string);
       };
       reader.readAsDataURL(file);
+    } else {
+      setImage(null);
+    }
+  };
+
+  const handleGenerateWithAi = async () => {
+    if (!image) return;
+    setAiError(null);
+    setIsGenerating(true);
+    try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers.Authorization = `Bearer ${token}`;
+
+      const res = await fetch('/api/ai/generate-post', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ image, language: postLanguage }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setAiError(data.error ?? 'Failed to generate content');
+        return;
+      }
+      setTitle(data.title ?? '');
+      setContent(data.content ?? '');
+    } catch {
+      setAiError('Failed to generate content');
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -46,6 +81,7 @@ function AddPostForm({ onAddPost, isPosting = false, onSuccess }: AddPostFormPro
       setTitle('');
       setContent('');
       setImage(null);
+      setAiError(null);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -95,11 +131,26 @@ function AddPostForm({ onAddPost, isPosting = false, onSuccess }: AddPostFormPro
           <input
             type="file"
             id="image"
-            accept="image/jpeg,.jpg,.jpeg"
+            accept="image/jpeg,image/png,.jpg,.jpeg,.png"
             onChange={handleImageChange}
             ref={fileInputRef}
           />
-          {image && <p className="image-preview-text">Image selected ✓</p>}
+          {image && (
+            <div className="add-post__image-actions">
+              <p className="image-preview-text">Image selected ✓</p>
+              <LoadingButton
+                type="button"
+                className="add-post__generate-ai"
+                onClick={handleGenerateWithAi}
+                loading={isGenerating}
+                loadingText="Generating…"
+                disabled={isPosting}
+              >
+                Generate with AI
+              </LoadingButton>
+            </div>
+          )}
+          {aiError && <p className="add-post__ai-error">{aiError}</p>}
         </div>
         <button type="submit" disabled={isPosting} className="add-post__submit">
           {isPosting ? (
