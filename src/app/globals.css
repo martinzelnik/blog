@@ -74,7 +74,7 @@ button:focus-visible {
 
 /* App layout */
 .app-wrapper {
-  width: 800px;
+  width: 900px;
   margin: 0 auto;
   padding: 1.5rem 2rem 2rem;
   text-align: left;
