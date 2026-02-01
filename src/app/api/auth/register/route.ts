@@ -44,14 +44,17 @@ export async function POST(request: NextRequest) {
       password,
     });
 
+    const role = (user as { role?: string }).role === 'admin' ? 'admin' : 'user';
     const token = await createToken({
       userId: user._id.toString(),
       username: user.username,
+      role,
     });
 
     return NextResponse.json({
       id: user._id.toString(),
       username: user.username,
+      role,
       token,
       message: 'Sign up successful',
     });

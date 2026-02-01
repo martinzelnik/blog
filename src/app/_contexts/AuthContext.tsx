@@ -3,9 +3,12 @@
 
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
 
+export type UserRole = 'user' | 'admin';
+
 export interface User {
   id: string;
   username: string;
+  role: UserRole;
 }
 
 interface StoredAuth {
@@ -44,7 +47,13 @@ function getStoredAuth(): StoredAuth | null {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (!stored) return null;
     const parsed = JSON.parse(stored);
-    if (parsed?.user && parsed?.token) return parsed;
+    if (parsed?.user && parsed?.token) {
+      const user = parsed.user as User;
+      return {
+        user: { ...user, role: user.role === 'admin' ? 'admin' : 'user' },
+        token: parsed.token,
+      };
+    }
     return null;
   } catch {
     return null;
@@ -96,7 +105,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!res.ok) {
         throw new Error(data.error || 'Login failed');
       }
-      const userData = { id: data.id, username: data.username };
+      const userData: User = {
+        id: data.id,
+        username: data.username,
+        role: data.role === 'admin' ? 'admin' : 'user',
+      };
       const authData: StoredAuth = { user: userData, token: data.token };
       setUser(userData);
       setToken(data.token);
@@ -122,7 +135,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!res.ok) {
         throw new Error(data.error || 'Sign up failed');
       }
-      const userData = { id: data.id, username: data.username };
+      const userData: User = {
+        id: data.id,
+        username: data.username,
+        role: data.role === 'admin' ? 'admin' : 'user',
+      };
       const authData: StoredAuth = { user: userData, token: data.token };
       setUser(userData);
       setToken(data.token);
@@ -156,7 +173,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
       const authData: StoredAuth = {
-        user: { id: data.id, username: data.username },
+        user: {
+          id: data.id,
+          username: data.username,
+          role: data.role === 'admin' ? 'admin' : 'user',
+        },
         token: data.token,
       };
       setUser(authData.user);

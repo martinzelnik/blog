@@ -46,7 +46,7 @@ function PostItem({ post, onDelete, isDeleting = false }: PostProps) {
 
   return (
     <article className="post">
-      {user && (
+      {user?.role === 'admin' && (
         <DeleteButton
           onDelete={() => onDelete(post.id)}
           loading={isDeleting}

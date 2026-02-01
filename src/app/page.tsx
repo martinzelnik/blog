@@ -95,7 +95,7 @@ export default function HomePage() {
   return (
       <>
         {error && <p role="alert" style={{ color: 'red' }}>{error}</p>}
-        {user && (
+        {user?.role === 'admin' && (
           <button 
             className="add-post-button" 
             onClick={() => setIsModalOpen(true)}

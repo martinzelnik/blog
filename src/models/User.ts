@@ -1,10 +1,13 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
+export type UserRole = 'user' | 'admin';
+
 export interface IUser {
   _id: mongoose.Types.ObjectId;
   username: string;
   password: string;
+  role?: UserRole;
 }
 
 export interface IUserMethods {
@@ -26,6 +29,11 @@ const UserSchema = new mongoose.Schema<IUser, UserModel, IUserMethods>(
       type: String, 
       required: true,
       minlength: 6,
+    },
+    role: {
+      type: String,
+      enum: ['user', 'admin'],
+      default: 'user',
     },
   },
   { timestamps: true, collection: 'users' }
