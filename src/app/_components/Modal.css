@@ -92,3 +92,27 @@
 .modal-body {
   padding: 1.5rem;
 }
+
+@media (prefers-color-scheme: dark) {
+  .modal-content {
+    background: #1a1a1a;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+
+  .modal-header {
+    border-bottom-color: #3f3f46;
+  }
+
+  .modal-header h2 {
+    color: rgba(255, 255, 255, 0.87);
+  }
+
+  .modal-close {
+    color: #a1a1aa;
+  }
+
+  .modal-close:hover {
+    background-color: #27272a;
+    color: rgba(255, 255, 255, 0.87);
+  }
+}

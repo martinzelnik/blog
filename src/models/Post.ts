@@ -17,7 +17,7 @@ const PostSchema = new mongoose.Schema<IPost>(
     image: { type: String, required: false },
     language: { type: String, enum: ['en', 'cs'], required: true },
   },
-  { timestamps: true }
+  { timestamps: true, collection: 'posts' }
 );
 
 export default mongoose.models.Post ?? mongoose.model<IPost>('Post', PostSchema);

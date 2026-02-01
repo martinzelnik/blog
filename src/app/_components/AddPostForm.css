@@ -83,3 +83,13 @@
   font-size: 0.9rem;
   margin: 0.5rem 0 0 0;
 }
+
+@media (prefers-color-scheme: dark) {
+  .add-post input,
+  .add-post textarea,
+  .add-post select {
+    background-color: #27272a;
+    border-color: #3f3f46;
+    color: rgba(255, 255, 255, 0.87);
+  }
+}
