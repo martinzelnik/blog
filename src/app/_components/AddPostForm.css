@@ -98,14 +98,35 @@
   margin: 0;
 }
 
-.add-post__generate-ai {
+.add-post .add-post__generate-ai {
   align-self: flex-start;
+  background: rgba(20, 184, 166, 0.5) !important;
+  border: 1px solid rgba(20, 184, 166, 0.4) !important;
+  color: white !important;
+}
+
+.add-post .add-post__generate-ai:hover:not(:disabled) {
+  background: rgba(13, 148, 136, 0.65) !important;
+  border-color: rgba(13, 148, 136, 0.5) !important;
 }
 
 .add-post__ai-error {
   color: #dc2626;
   font-size: 0.9rem;
   margin: 0.5rem 0 0 0;
+}
+
+@media (prefers-color-scheme: light) {
+  .add-post .add-post__generate-ai {
+    background: rgba(20, 184, 166, 0.7) !important;
+    border-color: rgba(20, 184, 166, 0.6) !important;
+    color: white !important;
+  }
+
+  .add-post .add-post__generate-ai:hover:not(:disabled) {
+    background: rgba(13, 148, 136, 0.85) !important;
+    border-color: rgba(13, 148, 136, 0.7) !important;
+  }
 }
 
 @media (prefers-color-scheme: dark) {
