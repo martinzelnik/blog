@@ -3,10 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import PostList from '@/app/_components/PostList';
 import AddPostForm from '@/app/_components/AddPostForm';
-import LoginForm from '@/app/_components/LoginForm';
-import LanguageToggle from '@/app/_components/LanguageToggle';
 import Modal from '@/app/_components/Modal';
-import { LanguageProvider } from '@/app/_contexts/LanguageContext';
+import { useAuth } from '@/app/_contexts/AuthContext';
 import type { Post } from '@/app/_components/PostItem';
 
 async function fetchPosts(): Promise<Post[]> {
@@ -15,22 +13,14 @@ async function fetchPosts(): Promise<Post[]> {
   return res.json();
 }
 
-interface User {
-  id: string;
-  username: string;
-}
-
 export default function HomePage() {
+  const { user } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [posting, setPosting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
-  const [loginLoading, setLoginLoading] = useState(false);
-  const [loginError, setLoginError] = useState<string | null>(null);
 
   const loadPosts = useCallback(async () => {
     try {
@@ -82,52 +72,17 @@ export default function HomePage() {
     }
   };
 
-  const handleLogin = async (username: string, password: string) => {
-    setLoginLoading(true);
-    setLoginError(null);
-    try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Login failed');
-      }
-      setUser({ id: data.id, username: data.username });
-      setIsLoginModalOpen(false);
-    } catch (e) {
-      setLoginError(e instanceof Error ? e.message : 'Login failed');
-    } finally {
-      setLoginLoading(false);
-    }
-  };
-
-  const handleLogout = () => {
-    setUser(null);
-  };
-
   return (
-    <LanguageProvider>
-      <div className="app-wrapper">
-        <header className="page-header">
-          <button 
-            className="login-button" 
-            onClick={user ? handleLogout : () => setIsLoginModalOpen(true)}
-          >
-            {user ? 'Log Out' : 'Log In'}
-          </button>
-          <h1>My Simple Blog</h1>
-          <LanguageToggle />
-        </header>
+      <>
         {error && <p role="alert" style={{ color: 'red' }}>{error}</p>}
-        <button 
-          className="add-post-button" 
-          onClick={() => setIsModalOpen(true)}
-        >
-          Add New Post
-        </button>
+        {user && (
+          <button 
+            className="add-post-button" 
+            onClick={() => setIsModalOpen(true)}
+          >
+            Add New Post
+          </button>
+        )}
         {loading ? (
           <div className="loading-spinner" role="status" aria-live="polite">
             <div className="loading-spinner__ring" aria-hidden />
@@ -147,21 +102,6 @@ export default function HomePage() {
             onSuccess={() => setIsModalOpen(false)}
           />
         </Modal>
-        <Modal
-          isOpen={isLoginModalOpen}
-          onClose={() => {
-            setIsLoginModalOpen(false);
-            setLoginError(null);
-          }}
-          title="Log In"
-        >
-          <LoginForm
-            onSubmit={handleLogin}
-            isLoading={loginLoading}
-            error={loginError}
-          />
-        </Modal>
-      </div>
-    </LanguageProvider>
+      </>
   );
 }

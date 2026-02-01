@@ -1,5 +1,8 @@
+'use client';
+
 import './PostItem.css';
 import DeleteButton from './DeleteButton';
+import { useAuth } from '@/app/_contexts/AuthContext';
 
 export interface Post {
   id: string;
@@ -17,12 +20,16 @@ interface PostProps {
 }
 
 function PostItem({ post, onDelete, isDeleting = false }: PostProps) {
+  const { user } = useAuth();
+
   return (
     <article className="post">
-      <DeleteButton
-        onDelete={() => onDelete(post.id)}
-        loading={isDeleting}
-      />
+      {user && (
+        <DeleteButton
+          onDelete={() => onDelete(post.id)}
+          loading={isDeleting}
+        />
+      )}
       <h2>{post.title}</h2>
       <p className="date">{post.date}</p>
       <div className="post-content-wrapper">
