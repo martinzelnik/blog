@@ -52,7 +52,7 @@ export default function HomePage() {
       if (res.status === 401) {
         logout();
         setError('Session expired. Please log in again.');
-        return;
+        throw new Error('Session expired');
       }
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -62,6 +62,7 @@ export default function HomePage() {
       setPosts((prev) => [newPost, ...prev]);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to add post');
+      throw e;
     } finally {
       setPosting(false);
     }

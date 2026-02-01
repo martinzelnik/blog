@@ -4,7 +4,7 @@ import type { Post } from './PostItem';
 import { useLanguage } from '@/app/_contexts/LanguageContext';
 
 interface AddPostFormProps {
-  onAddPost: (data: Omit<Post, 'id'>) => void;
+  onAddPost: (data: Omit<Post, 'id'>) => Promise<void>;
   isPosting?: boolean;
   onSuccess?: () => void;
 }
@@ -32,10 +32,11 @@ function AddPostForm({ onAddPost, isPosting = false, onSuccess }: AddPostFormPro
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (title.trim() && content.trim()) {
-      onAddPost({
+    if (!title.trim() || !content.trim()) return;
+    try {
+      await onAddPost({
         title: title.trim(),
         content: content.trim(),
         date: new Date().toISOString().split('T')[0],
@@ -49,6 +50,8 @@ function AddPostForm({ onAddPost, isPosting = false, onSuccess }: AddPostFormPro
         fileInputRef.current.value = '';
       }
       onSuccess?.();
+    } catch {
+      // Error is handled by parent
     }
   };
 
