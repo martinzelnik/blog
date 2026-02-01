@@ -14,7 +14,7 @@ export interface Post {
   language: 'en' | 'cs';
 }
 
-const MAX_PREVIEW_LENGTH = 200;
+const MAX_PREVIEW_LENGTH = 1000;
 
 interface PostProps {
   post: Post;
@@ -31,6 +31,8 @@ function PostItem({ post, onDelete, isDeleting = false }: PostProps) {
     ? `${post.content.slice(0, MAX_PREVIEW_LENGTH).trim()}…`
     : post.content;
 
+  const paragraphs = displayContent.split(/\n\n+/).filter(Boolean);
+
   return (
     <article className="post">
       {user && (
@@ -43,7 +45,16 @@ function PostItem({ post, onDelete, isDeleting = false }: PostProps) {
       <p className="date">{post.date}</p>
       <div className="post-content-wrapper">
         {post.image && <img src={post.image} alt={post.title} className="post-image" />}
-        <p className="post-text">{displayContent}</p>
+        <div className="post-text">
+          {paragraphs.map((para, i) => (
+            <p key={i}>{para.split('\n').map((line, j) => (
+              <span key={j}>
+                {j > 0 && <br />}
+                {line}
+              </span>
+            ))}</p>
+          ))}
+        </div>
         {isLong && (
           <button
             type="button"

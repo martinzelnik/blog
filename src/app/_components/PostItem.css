@@ -22,6 +22,14 @@
   margin: 0;
 }
 
+.post-text p {
+  margin: 0 0 1em 0;
+}
+
+.post-text p:last-child {
+  margin-bottom: 0;
+}
+
 .post-expand-button {
   margin-top: 0.5rem;
   padding: 0.25rem 0;
@@ -45,7 +53,8 @@
 
 .post-image {
   float: left;
-  width: 200px;
+  width: 320px;
+  max-width: 100%;
   height: auto;
   border-radius: 4px;
   object-fit: cover;
